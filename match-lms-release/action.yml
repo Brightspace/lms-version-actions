@@ -57,7 +57,7 @@ runs:
           echo "Patching Version: \"npm version patch\"..."
           NEW_VERSION=$(npm version patch -m "Updated version to %s [skip ci]" | cut -dv -f2)
         else
-          if [ ${{ inputs.AUTO_MAINTENANCE_BRANCH }} == true ]; then
+          if [ ${{ inputs.AUTO_MAINTENANCE_BRANCH }} == true ] && [ ${{ inputs.DRY_RUN }} == false ]; then
             echo creating a maintenance branch for ${LATEST_MINOR}.x
             git fetch https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "+refs/tags/v$LATEST_VERSION:refs/tags/v$LATEST_VERSION" --no-tags
             git branch "release/$LATEST_MINOR.x" "v$LATEST_VERSION"
