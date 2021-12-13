@@ -1,0 +1,89 @@
+name: Match LMS Release
+description: Create a release based on the current version of Brightspace and the patch version of the consumer
+
+inputs:
+  DRY_RUN:
+    description: Simulates a release but does not actually do one
+    default: false
+    required: false
+  AUTO_MAINTENANCE_BRANCH:
+    description: Automatically create maintenance branches when bumping lms releases
+    default: true
+    required: false
+  RALLY_API_KEY:
+    description: 'API key to find active releases in Rally'
+    required: true
+  GITHUB_TOKEN:
+    description: Token to use to update version in 'package.json' and create the tag
+    required: true
+
+outputs:
+  VERSION:
+    description: Version of the new release
+    value: ${{ steps.increment-version.outputs.version }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install Dependencies
+      run: |
+        if [ ${{ !contains(github.event.head_commit.message, 'skip ci') }} == true ]; then
+          echo "Installing dependencies..."
+          npm install @octokit/rest@18 --prefix ${{ github.action_path }} --no-save --loglevel error
+        fi
+      shell: bash
+
+    - uses: Brightspace/lms-version-actions/get-lms-release@main
+      id: get-lms-version
+      with:
+        RALLY_API_KEY: ${{ inputs.RALLY_API_KEY }}
+
+    - name: Update Version
+      id: update-version
+      run: |
+        set -eu
+        git config user.name github-actions[bot]
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+
+        #manipulate lms version from expected 20.22.11 format to 2022.11 format
+        LMSVER_MATCH=$(echo ${{ steps.get-lms-version.outputs.LMS_VERSION}} | sed 's/\.//')
+        #get latest minor release from package.json ie: 2022.11
+        LATEST_VERSION=$(node -p "require('./package.json').version")
+        LATEST_MINOR=$(echo $LATEST_VERSION | sed 's/\.[^.]*$//')
+
+        echo running on branch ${GITHUB_REF##*/}
+        if [ "$LMSVER_MATCH" == "$LATEST_MINOR" ] || [[ "${GITHUB_REF##*/}" =~ ^[0-9]+.[0-9]+.x$ ]]
+        then
+          echo "Patching Version: \"npm version patch\"..."
+          NEW_VERSION=$(npm version patch -m "Updated version to %s [skip ci]" | cut -dv -f2)
+        else
+          if [ ${{ inputs.AUTO_MAINTENANCE_BRANCH }} == true ]; then
+            echo creating a maintenance branch for ${LATEST_MINOR}.x
+            git fetch https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "+refs/tags/v$LATEST_VERSION:refs/tags/v$LATEST_VERSION" --no-tags
+            git branch "release/$LATEST_MINOR.x" "v$LATEST_VERSION"
+            git push https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "release/$LATEST_MINOR.x"
+          fi
+          #update directly instead of bumping in case we've missed one
+          echo "Updating major/minor versions to match current Brightspace release: \"npm version ${LMSVER_MATCH}\"..."
+          NEW_VERSION=$(npm version "${LMSVER_MATCH}.0" -m "Updated version to %s [skip ci]" | cut -dv -f2)
+        fi
+
+        echo "New version number will be: $NEW_VERSION"
+        echo "::set-output name=version::$NEW_VERSION"
+
+        if [ ${{ inputs.DRY_RUN }} == false ]; then
+          echo "Not a dry run, pushing..."
+          git push --follow-tags --repo=https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+        fi
+      shell: bash
+
+    - name: Create Release
+      run: |
+        if [ ${{ inputs.DRY_RUN }} == true ]; then
+          echo "DRY_RUN option specified, skipping release creation."
+          exit 0;
+        fi
+        node ${{ github.action_path }}/create-release.js ${{ steps.update-version.outputs.version }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+      shell: bash

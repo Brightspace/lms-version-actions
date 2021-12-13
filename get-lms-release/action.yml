@@ -1,0 +1,12 @@
+name: 'Get LMS Version'
+description: 'Retrieves the current dev version of Brightspace from Rally'
+inputs:
+  RALLY_API_KEY:
+    description: 'Token to find active releases in Rally'
+    required: true
+outputs:
+  lms-version:
+    description: 'Current dev version of the LMS'
+runs:
+  using: 'node12'
+  main: 'index.js'
