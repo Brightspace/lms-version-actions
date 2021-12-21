@@ -52,3 +52,5 @@ The release step will fail to write to `package.json` if you have branch protect
 
 ## Release Increments
 The first commit made during any given LMS release will update the Major and/or Minor versions to match the LMS version provided. Other commits during the same LMS release will trigger patch releases.
+
+Pull requests merged into maintenance branches created by the action (ex: `release/2022.2.x`) or named for a minor version (ex: `1.7.x`) will trigger patch releases for the maintenance branch version.
