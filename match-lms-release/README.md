@@ -29,7 +29,6 @@ jobs:
       - name: Setup Node
         uses: Brightspace/third-party-actions@actions/setup-node
       - name: Match LMS Release
-        id: matchlmsrelease
         uses: Brightspace/lms-version-actions/match-lms-release@main
         with:
           GITHUB_TOKEN: ${{ secrets.D2L_GITHUB_TOKEN }}
@@ -49,7 +48,7 @@ Outputs:
 
 The release step will fail to write to `package.json` if you have branch protection rules set up in your repository. To get around this, we use a special Admin `D2L_GITHUB_TOKEN`.
 
-[Learn how to set up the D2L_GITHUB_TOKEN...](../docs/branch-protection.md)
+[Learn how to set up the D2L_GITHUB_TOKEN...](https://github.com/BrightspaceUI/actions/blob/main/docs/branch-protection.md)
 
 ## Release Increments
 The first commit made during any given LMS release will update the Major and/or Minor versions to match the LMS version provided. Other commits during the same LMS release will trigger patch releases.
