@@ -1,0 +1,189 @@
+name: Create Backport PR
+description: 'Create a backport PR from a source PR back to a specified release branch. Example: /backport 20.21.7'
+
+
+inputs:
+  GITHUB_TOKEN:
+    description: Token to use to update version in 'package.json' and create the tag
+    required: true
+
+runs:
+  using: composite
+  steps:
+    #get the pull request information from the PR where the backport command was issued (source PR)
+    - name: Get Source PR Information
+      id: source-pr
+      uses: Brightspace/third-party-actions@actions/github-script
+      with:
+        github-token:  ${{ inputs.GITHUB_TOKEN }}
+        script: |
+          const pullId = context.payload.issue.html_url.split('/').pop();
+          const response = await github.pulls.get({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: pullId
+          });
+          return response.data;
+
+    #grab the body of the comment to find the version we want to backport to
+    - name: Get Destination Name
+      id: destination-version
+      uses: Brightspace/third-party-actions@actions/github-script
+      env:
+        BODY: ${{ github.event.comment.body }}
+      with:
+        github-token:  ${{ inputs.GITHUB_TOKEN }}
+        result-encoding: string
+        script: |
+          const version = process.env.BODY.split(' ').pop();
+          return version;
+
+    #find the branch corresponding to the version we want to backport to (destination branch)
+    - name: Get Destination Branch
+      id: destination-branch
+      uses: Brightspace/third-party-actions@actions/github-script
+      env:
+        DESTINATION_VERSION: ${{ steps.destination-version.outputs.result }}
+      with:
+        github-token:  ${{ inputs.GITHUB_TOKEN }}
+        script: |
+          const response = await github.repos.getBranch({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            branch: `release/${ process.env.DESTINATION_VERSION }`
+          });
+          return response.data;
+
+    #checkout the destination branch
+    - name: Checkout Destination Branch
+      uses: Brightspace/third-party-actions@actions/checkout
+      with:
+        ref: ${{ fromJSON(steps.destination-branch.outputs.result).name }}
+
+    #add comment to source PR to acknowledge backport process
+    - name: Acknowledge comment
+      uses: Brightspace/third-party-actions@actions/github-script
+      env:
+        SOURCE_PR_HTML_URL: ${{ fromJSON(steps.source-pr.outputs.result).html_url }}
+        DESTINATION_VERSION: ${{ steps.destination-version.outputs.result }}
+        DESTINATION_BRANCH_LINK: ${{ fromJSON(steps.destination-branch.outputs.result)._links.html }}
+      with:
+        github-token:  ${{ inputs.GITHUB_TOKEN }}
+        script: |
+          github.issues.createComment({
+            issue_number: context.payload.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `Initiating backport to [${ process.env.DESTINATION_VERSION }](${ process.env.DESTINATION_BRANCH_LINK })
+            View [workflow progress](https://github.com/${ context.repo.owner }/${ context.repo.repo }/actions/runs/${ context.runId }) for more info.`
+          });
+
+    #Get list of commits from source Branch
+    - name: Get List of Source Commits
+      id: source-pr-patch
+      uses: Brightspace/third-party-actions@actions/github-script
+      env:
+        PRNUM: ${{ fromJSON(steps.source-pr.outputs.result).number }}
+      with:
+        github-token:  ${{ inputs.GITHUB_TOKEN }}
+        result-encoding: string
+        script: |
+          const response = await github.pulls.get({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            pull_number: process.env.PRNUM,
+            mediaType: {
+              format: "application/vnd.github.v3.patch"
+            }
+          });
+          return response.data
+
+    #Apply commits from Source Branch to Destination Branch
+    - name: Apply patch and push
+      env:
+        INPUT_DESTINATION_HEAD_BRANCH: 'ghworkflow/backport-${{ steps.destination-version.outputs.result }}/${{ fromJSON(steps.source-pr.outputs.result).head.ref }}'
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git fetch origin +refs/heads/$INPUT_DESTINATION_HEAD_BRANCH:refs/heads/$INPUT_DESTINATION_HEAD_BRANCH || true
+        git checkout $INPUT_DESTINATION_HEAD_BRANCH || git checkout -b $INPUT_DESTINATION_HEAD_BRANCH
+        git apply --check << "D2LEOF"
+        ${{ steps.source-pr-patch.outputs.result }}
+        D2LEOF
+        git am --keep-cr --signoff << "D2LEOF"
+        ${{ steps.source-pr-patch.outputs.result }}
+        D2LEOF
+        git push origin $INPUT_DESTINATION_HEAD_BRANCH:$INPUT_DESTINATION_HEAD_BRANCH
+      shell: bash
+
+    #Open backport PR on destination branch
+    - name: Open Backport PR
+      id: backport-pr
+      uses: Brightspace/third-party-actions@actions/github-script
+      env:
+        DESTINATION_VERSION: ${{ steps.destination-version.outputs.result }}
+        DESTINATION_BRANCH: ${{ fromJSON(steps.destination-branch.outputs.result).name }}
+        SOURCE_PR_TITLE: ${{ fromJSON( steps.source-pr.outputs.result).title }}
+        SOURCE_PR_HEAD: ${{ fromJSON(steps.source-pr.outputs.result).head.ref }}
+        SOURCE_PR_HTML_URL: ${{ fromJSON( steps.source-pr.outputs.result).html_url }}
+      with:
+        github-token:  ${{ inputs.GITHUB_TOKEN }}
+        script: |
+          const response = await github.pulls.create({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            title: `Backport to ${ process.env.DESTINATION_VERSION } of "${ process.env.SOURCE_PR_TITLE }"`,
+            head: `ghworkflow/backport-${ process.env.DESTINATION_VERSION }/${ process.env.SOURCE_PR_HEAD }`,
+            base: process.env.DESTINATION_BRANCH,
+            body: `Backport of ${ process.env.SOURCE_PR_HTML_URL } to ${ process.env.DESTINATION_VERSION }`,
+            draft: true
+          });
+          return response.data
+
+    #Comment on source PR that destination PR is ready
+    - name: Create PR Comment
+      uses: Brightspace/third-party-actions@actions/github-script
+      env:
+        DESTINATION_VERSION: ${{ steps.destination-version.outputs.result }}
+        DESTINATION_BRANCH_LINK: ${{ fromJSON(steps.destination-branch.outputs.result)._links.html }}
+        DESTINATION_PR_HTML_URL: ${{ fromJSON(steps.backport-pr.outputs.result).html_url }}
+        SOURCE_PR_HTML_URL: ${{ fromJSON( steps.source-pr.outputs.result).html_url }}
+      with:
+        github-token:  ${{ inputs.GITHUB_TOKEN }}
+        script: |
+          github.issues.createComment({
+            issue_number: context.payload.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `Backport PR has been created: ${ process.env.DESTINATION_PR_HTML_URL } backports the changes from ${ process.env.SOURCE_PR_HTML_URL } to [${ process.env.DESTINATION_VERSION }](${ process.env.DESTINATION_BRANCH_LINK })`
+          });
+
+    #Comment on source PR if something went wrong
+    - name: Failure comment notification
+      if: ${{ failure() }}
+      uses: Brightspace/third-party-actions@actions/github-script
+      env:
+        DESTINATION_VERSION: ${{ steps.destination-version.outputs.result }}
+      with:
+        github-token: ${{ inputs.GITHUB_TOKEN }}
+        script: |
+          console.log(${{ steps.destination-branch.outcome }});
+          github.issues.createComment({
+            issue_number: context.payload.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: `**Backport to ${ process.env.DESTINATION_VERSION } failed**
+
+            Check that your destination branch exists: \`release/${ process.env.DESTINATION_VERSION }\`
+            If so, check the [workflow logs](https://github.com/${ context.repo.owner }/${ context.repo.repo }/actions/runs/${ context.runId }) for more info. Manual [cherry picking](https://git-scm.com/docs/git-cherry-pick) may be required.`
+          });
+
+    #If someothing has broken, clean it up
+    - name: Failure cleanup
+      if: ${{ failure() }}
+      run: |
+        git config user.name github-actions
+        git config user.email github-actions@github.com
+        git am --abort
+        git status
+      shell: bash
