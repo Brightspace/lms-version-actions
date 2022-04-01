@@ -4,7 +4,7 @@ This GitHub action automatically increments the package version to match a given
 
 ## Using the Action
 
-Typically this action is triggered from a workflow that runs on your `main` or `master` branch after each commit or pull request merge.
+Typically this action is triggered from a workflow that runs on your `main` or `master` branch after each commit or pull request merge. It requires that the repo have an existing `package.json` with a defined `version` before the first run.
 
 Here's a sample release workflow:
 
