@@ -76,7 +76,6 @@ async function tryGetActiveDevelopmentRelease(api_key) {
 	}
 
 	let activeReleaseName = release.Name;
-	activeReleaseName = '20.22.06';
 
 	const match = rallyVersionChecker.exec(activeReleaseName);
 	if (!match) {
