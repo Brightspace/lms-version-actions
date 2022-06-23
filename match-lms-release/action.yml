@@ -16,6 +16,13 @@ inputs:
   GITHUB_TOKEN:
     description: Token to use to update version in 'package.json' and create the tag
     required: true
+  NPM:
+    description: Whether or not to release as an NPM package
+    default: false
+    required: false
+  NPM_TOKEN:
+    description: Token to publish to NPM
+    required: false
 
 outputs:
   VERSION:
@@ -38,6 +45,13 @@ runs:
       with:
         RALLY_API_KEY: ${{ inputs.RALLY_API_KEY }}
 
+    - name: Gather Information
+      id: info
+      run: |
+        MAINTENANCE_VERSION=$(echo ${GITHUB_REF##*/} | grep -Eo '^[0-9]+\.([0-9]+\.)?x$')
+        echo "::set-output name=MAINTENANCE_VERSION::$MAINTENANCE_VERSION"
+      shell: bash
+
     - name: Update Version
       id: update-version
       run: |
@@ -52,8 +66,7 @@ runs:
         LATEST_MINOR=$(echo $LATEST_VERSION | sed 's/\.[^.]*$//')
 
         echo running on branch ${GITHUB_REF##*/}
-        if [ "$LMSVER_MATCH" == "$LATEST_MINOR" ] || [[ "${GITHUB_REF##*/}" =~ ^[0-9]+.[0-9]+.x$ ]]
-        then
+        if [ "$LMSVER_MATCH" == "$LATEST_MINOR" ] || [ ! -z "${{ steps.info.outputs.MAINTENANCE_VERSION }}" ]; then
           echo "Patching Version: \"npm version patch\"..."
           NEW_VERSION=$(npm version patch -m "Updated version to %s [skip ci]" | cut -dv -f2)
         else
@@ -86,4 +99,16 @@ runs:
         node ${{ github.action_path }}/create-release.js ${{ steps.update-version.outputs.version }}
       env:
         GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+      shell: bash
+
+    - name: Publish to NPM
+      if: ${{ inputs.NPM != 'false' }}
+      run: |
+        OPTS=""
+        [ ${{ inputs.DRY_RUN }} == true ] && OPTS=" --dry-run"
+        [ ! -z "${{ steps.info.outputs.MAINTENANCE_VERSION }}" ] && OPTS="${OPTS} --tag release-${{ steps.info.outputs.MAINTENANCE_VERSION }}"
+
+        npm publish ${OPTS}
+      env:
+        NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
       shell: bash
