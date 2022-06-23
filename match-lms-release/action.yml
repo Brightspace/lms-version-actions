@@ -48,7 +48,8 @@ runs:
     - name: Gather Information
       id: info
       run: |
-        MAINTENANCE_VERSION=$(echo ${GITHUB_REF##*/} | grep -Eo '^[0-9]+\.([0-9]+\.)?x$')
+        MAINTENANCE_VERSION=$(echo "${GITHUB_REF##*/}" | grep -Eo "^[0-9]+\.([0-9]+\.)?x$" || true)
+        echo "Maintenance version determined from branch name: $MAINTENANCE_VERSION"
         echo "::set-output name=MAINTENANCE_VERSION::$MAINTENANCE_VERSION"
       shell: bash
 
@@ -108,6 +109,7 @@ runs:
         [ ${{ inputs.DRY_RUN }} == true ] && OPTS=" --dry-run"
         [ ! -z "${{ steps.info.outputs.MAINTENANCE_VERSION }}" ] && OPTS="${OPTS} --tag release-${{ steps.info.outputs.MAINTENANCE_VERSION }}"
 
+        echo "Running npm publish with options: ${OPTS}"
         npm publish ${OPTS}
       env:
         NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
