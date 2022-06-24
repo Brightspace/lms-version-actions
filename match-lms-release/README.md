@@ -66,27 +66,40 @@ NPM deployments for maintenance branches (ex: `release/2022.2.x`, `1.7.x`, or `1
 
 ### CodeArtifact
 
-To publish to CodeArtifact, ensure that prior to running the `incremental-release` step that the [add-registry](https://github.com/Brightspace/codeartifact-actions/tree/main/npm) and the [get-authorization-token](https://github.com/Brightspace/codeartifact-actions/tree/main/get-authorization-token) steps have been run.
+To publish to CodeArtifact, ensure that prior to running the `match-lms-release` step that the [add-registry](https://github.com/Brightspace/codeartifact-actions/tree/main/npm) and the [get-authorization-token](https://github.com/Brightspace/codeartifact-actions/tree/main/get-authorization-token) steps have been run:
+
+```yml
+- name: Get CodeArtifact authorization token
+  uses: Brightspace/codeartifact-actions/get-authorization-token@main
+  env:
+    AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+    AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+    AWS_SESSION_TOKEN: ${{secrets.AWS_SESSION_TOKEN}}
+- name: Add CodeArtifact npm registry
+  uses: Brightspace/codeartifact-actions/npm/add-registry@main
+  with:
+    auth-token: ${{env.CODEARTIFACT_AUTH_TOKEN}}
+```
 
 ### NPM
 
-Setup Node with the `registry-url` option:
+Setup Node:
 
 ```yml
 - name: Setup Node
   uses: Brightspace/third-party-actions@actions/setup-node
-    with:
-     registry-url: 'https://registry.npmjs.org'
 ```
 
 Then pass through the `NPM_TOKEN` secret.
 
 ```yml
-- name: Incremental Release
-  uses: BrightspaceUI/actions/incremental-release@main
-    with:
-      NPM: true
-      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+- name: Match LMS Release
+  uses: Brightspace/lms-version-actions/match-lms-release@main
+  with:
+    GITHUB_TOKEN: ${{ secrets.D2L_GITHUB_TOKEN }}
+    RALLY_API_KEY: ${{ secrets.RALLY_API_KEY }}
+    NPM: true
+    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
 
 `NPM_TOKEN` is available as a shared organization secret in the `Brightspace`, `BrightspaceUI`, `BrightspaceUILabs` and `BrightspaceHypermediaComponents` organizations.
