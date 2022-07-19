@@ -35,7 +35,10 @@ runs:
         github-token:  ${{ inputs.GITHUB_TOKEN }}
         result-encoding: string
         script: |
-          const version = process.env.BODY.split(' ').pop();
+          let version = process.env.BODY.split(' ').pop();
+          if (version.startsWith('release/')) {
+            version = version.split('/').pop();
+          }
           return version;
 
     #find the branch corresponding to the version we want to backport to (destination branch)
