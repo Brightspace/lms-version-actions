@@ -106,8 +106,8 @@ runs:
       env:
         INPUT_DESTINATION_HEAD_BRANCH: 'ghworkflow/backport-${{ steps.destination-version.outputs.result }}/${{ fromJSON(steps.source-pr.outputs.result).head.ref }}'
       run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name github-actions[bot]
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         git fetch origin +refs/heads/$INPUT_DESTINATION_HEAD_BRANCH:refs/heads/$INPUT_DESTINATION_HEAD_BRANCH || true
         git checkout $INPUT_DESTINATION_HEAD_BRANCH || git checkout -b $INPUT_DESTINATION_HEAD_BRANCH
         git apply --check << "D2LEOF"
@@ -185,8 +185,8 @@ runs:
     - name: Failure cleanup
       if: ${{ failure() }}
       run: |
-        git config user.name github-actions
-        git config user.email github-actions@github.com
+        git config user.name github-actions[bot]
+        git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         git am --abort
         git status
       shell: bash
