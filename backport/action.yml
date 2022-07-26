@@ -62,6 +62,7 @@ runs:
       uses: Brightspace/third-party-actions@actions/checkout
       with:
         ref: ${{ fromJSON(steps.destination-branch.outputs.result).name }}
+        persist-credentials: false
 
     #add comment to source PR to acknowledge backport process
     - name: Acknowledge comment
@@ -109,7 +110,7 @@ runs:
       run: |
         git config user.name github-actions[bot]
         git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-        git fetch origin +refs/heads/$INPUT_DESTINATION_HEAD_BRANCH:refs/heads/$INPUT_DESTINATION_HEAD_BRANCH || true
+        git fetch https://$GITHUB_TOKEN@github.com/${{ github.repository }} +refs/heads/$INPUT_DESTINATION_HEAD_BRANCH:refs/heads/$INPUT_DESTINATION_HEAD_BRANCH || true
         git checkout $INPUT_DESTINATION_HEAD_BRANCH || git checkout -b $INPUT_DESTINATION_HEAD_BRANCH
         git apply --check << "D2LEOF"
         ${{ steps.source-pr-patch.outputs.result }}
@@ -117,7 +118,7 @@ runs:
         git am --keep-cr --signoff << "D2LEOF"
         ${{ steps.source-pr-patch.outputs.result }}
         D2LEOF
-        git push https://${GITHUB_TOKEN}@github.com/${{ github.repository }} $INPUT_DESTINATION_HEAD_BRANCH:$INPUT_DESTINATION_HEAD_BRANCH
+        git push https://$GITHUB_TOKEN@github.com/${{ github.repository }} $INPUT_DESTINATION_HEAD_BRANCH:$INPUT_DESTINATION_HEAD_BRANCH
       shell: bash
 
     #Open backport PR on destination branch
@@ -182,7 +183,7 @@ runs:
             If so, check the [workflow logs](https://github.com/${ context.repo.owner }/${ context.repo.repo }/actions/runs/${ context.runId }) for more info. Manual [cherry picking](https://git-scm.com/docs/git-cherry-pick) may be required.`
           });
 
-    #If someothing has broken, clean it up
+    #If something has broken, clean it up
     - name: Failure cleanup
       if: ${{ failure() }}
       run: |
