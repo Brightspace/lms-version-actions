@@ -27,7 +27,7 @@ inputs:
 outputs:
   VERSION:
     description: Version of the new release
-    value: ${{ steps.increment-version.outputs.version }}
+    value: ${{ steps.update-version.outputs.version }}
 
 runs:
   using: composite
