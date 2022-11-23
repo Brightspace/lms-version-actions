@@ -77,7 +77,7 @@ runs:
         fi
 
         echo "New version number will be: $NEW_VERSION"
-        echo "::set-output name=version::$NEW_VERSION"
+        echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
         if [ ${{ inputs.DRY_RUN }} == false ]; then
           echo "Not a dry run, pushing..."
