@@ -62,7 +62,7 @@ runs:
       uses: Brightspace/third-party-actions@actions/checkout
       with:
         ref: ${{ fromJSON(steps.destination-branch.outputs.result).name }}
-        persist-credentials: false
+        token: ${{ inputs.GITHUB_TOKEN }}
 
     #add comment to source PR to acknowledge backport process
     - name: Acknowledge comment
