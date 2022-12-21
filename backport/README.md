@@ -22,7 +22,7 @@ jobs:
   Backport:
     if: github.event.issue.pull_request && startswith(github.event.comment.body, '/backport')
     timeout-minutes: 5
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, AWS]
 
     steps:
       - name: Create Backport PR
