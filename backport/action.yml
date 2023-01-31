@@ -18,7 +18,7 @@ runs:
         github-token:  ${{ inputs.GITHUB_TOKEN }}
         script: |
           const pullId = context.payload.issue.html_url.split('/').pop();
-          const response = await github.pulls.get({
+          const response = await github.rest.pulls.get({
             owner: context.repo.owner,
             repo: context.repo.repo,
             pull_number: pullId
@@ -50,7 +50,7 @@ runs:
       with:
         github-token:  ${{ inputs.GITHUB_TOKEN }}
         script: |
-          const response = await github.repos.getBranch({
+          const response = await github.rest.repos.getBranch({
             owner: context.repo.owner,
             repo: context.repo.repo,
             branch: `release/${ process.env.DESTINATION_VERSION }`
@@ -74,7 +74,7 @@ runs:
       with:
         github-token:  ${{ inputs.GITHUB_TOKEN }}
         script: |
-          github.issues.createComment({
+          github.rest.issues.createComment({
             issue_number: context.payload.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
@@ -92,7 +92,7 @@ runs:
         github-token:  ${{ inputs.GITHUB_TOKEN }}
         result-encoding: string
         script: |
-          const response = await github.pulls.get({
+          const response = await github.rest.pulls.get({
             owner: context.repo.owner,
             repo: context.repo.repo,
             pull_number: process.env.PRNUM,
@@ -134,7 +134,7 @@ runs:
       with:
         github-token:  ${{ inputs.GITHUB_TOKEN }}
         script: |
-          const response = await github.pulls.create({
+          const response = await github.rest.pulls.create({
             owner: context.repo.owner,
             repo: context.repo.repo,
             title: `Backport to ${ process.env.DESTINATION_VERSION } of "${ process.env.SOURCE_PR_TITLE }"`,
@@ -156,7 +156,7 @@ runs:
       with:
         github-token:  ${{ inputs.GITHUB_TOKEN }}
         script: |
-          github.issues.createComment({
+          github.rest.issues.createComment({
             issue_number: context.payload.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
@@ -173,7 +173,7 @@ runs:
         github-token: ${{ inputs.GITHUB_TOKEN }}
         script: |
           console.log(${{ steps.destination-branch.outcome }});
-          github.issues.createComment({
+          github.rest.issues.createComment({
             issue_number: context.payload.issue.number,
             owner: context.repo.owner,
             repo: context.repo.repo,
