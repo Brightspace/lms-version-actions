@@ -60,13 +60,13 @@ Pull requests merged into maintenance branches created by the action (ex: `relea
 
 ## NPM Package Deployment
 
-If you'd like the action to deploy your package to NPM, set the `NPM` option to `true`.
+If you'd like the action to deploy your package to NPM or CodeArtifact, set the `NPM` option to `true`.
 
 NPM deployments for maintenance branches (ex: `release/2022.2.x`, `1.7.x`, or `1.x`) will be annotated with a tag corresponding to the branch version (ex: `release-2022.2.x`, `release-1.7.x`, or `release-1.x`). All other deployments will use NPM's default tag of `latest`.
 
 ### CodeArtifact
 
-To publish to CodeArtifact, ensure that prior to running the `match-lms-release` step that the [add-registry](https://github.com/Brightspace/codeartifact-actions/tree/main/npm) and the [get-authorization-token](https://github.com/Brightspace/codeartifact-actions/tree/main/get-authorization-token) steps have been run:
+To publish to CodeArtifact, ensure that prior to running the `match-lms-release` step the [add-registry](https://github.com/Brightspace/codeartifact-actions/tree/main/npm) and the [get-authorization-token](https://github.com/Brightspace/codeartifact-actions/tree/main/get-authorization-token) steps have been run:
 
 ```yml
 - name: Get CodeArtifact authorization token
@@ -80,6 +80,12 @@ To publish to CodeArtifact, ensure that prior to running the `match-lms-release`
   with:
     auth-token: ${{env.CODEARTIFACT_AUTH_TOKEN}}
 ```
+
+Also ensure that:
+
+1. The repo has been [configured for CodeArtifact](https://github.com/Brightspace/codeartifact-actions/tree/main/npm#packagejson) in [repo-settings](https://github.com/Brightspace/repo-settings)
+2. The package name is prefixed with `@d2l` (e.g. `@d2l/package-name`) in both `package.json` and [repo-settings](https://github.com/Brightspace/repo-settings)
+3. You have [configured `publishConfig` correctly](https://github.com/Brightspace/codeartifact-actions/tree/main/npm#packagejson) in `package.json`
 
 ### NPM
 
