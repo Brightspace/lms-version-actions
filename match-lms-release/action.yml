@@ -67,9 +67,9 @@ runs:
         else
           if [ ${{ inputs.AUTO_MAINTENANCE_BRANCH }} == true ] && [ ${{ inputs.DRY_RUN }} == false ]; then
             echo creating a maintenance branch for ${LATEST_MINOR}.x
-            git fetch https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "+refs/tags/v$LATEST_VERSION:refs/tags/v$LATEST_VERSION" --no-tags
+            git fetch https://x-access-token:${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "+refs/tags/v$LATEST_VERSION:refs/tags/v$LATEST_VERSION" --no-tags
             git branch "release/$LATEST_MINOR.x" "v$LATEST_VERSION"
-            git push https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "release/$LATEST_MINOR.x"
+            git push https://x-access-token:${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "release/$LATEST_MINOR.x"
           fi
           #update directly instead of bumping in case we've missed one
           echo "Updating major/minor versions to match current Brightspace release: \"npm version ${LMSVER_MATCH}\"..."
@@ -81,7 +81,7 @@ runs:
 
         if [ ${{ inputs.DRY_RUN }} == false ]; then
           echo "Not a dry run, pushing..."
-          git push --follow-tags --repo=https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }}
+          git push --follow-tags --repo=https://x-access-token:${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }}
         fi
       shell: bash
 
