@@ -60,7 +60,7 @@ Pull requests merged into maintenance branches created by the action (ex: `relea
 
 ## NPM Package Deployment
 
-If you'd like the action to deploy your package to NPM or CodeArtifact, set the `NPM` option to `true`.
+If you'd like the action to publish your package with NPM (including to CodeArtifact), set the `NPM` option to `true`.
 
 NPM deployments for maintenance branches (ex: `release/2022.2.x`, `1.7.x`, or `1.x`) will be annotated with a tag corresponding to the branch version (ex: `release-2022.2.x`, `release-1.7.x`, or `release-1.x`). All other deployments will use NPM's default tag of `latest`.
 
