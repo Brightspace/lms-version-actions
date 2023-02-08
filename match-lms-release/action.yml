@@ -67,7 +67,7 @@ runs:
         else
           if [ ${{ inputs.AUTO_MAINTENANCE_BRANCH }} == true ] && [ ${{ inputs.DRY_RUN }} == false ]; then
             echo creating a maintenance branch for ${LATEST_MINOR}.x
-            git fetch https://${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "+refs/tags/v$LATEST_VERSION:refs/tags/v$LATEST_VERSION" --no-tags
+            git fetch https://x-access-token:${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "+refs/tags/v$LATEST_VERSION:refs/tags/v$LATEST_VERSION" --no-tags
             git branch "release/$LATEST_MINOR.x" "v$LATEST_VERSION"
             git push https://x-access-token:${{ inputs.GITHUB_TOKEN }}@github.com/${{ github.repository }} "release/$LATEST_MINOR.x"
           fi
