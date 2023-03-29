@@ -1,15 +1,13 @@
-const core = require('@actions/core');
-const github = require('@actions/github');
-const lmsVersionHelper = require('./lms-version-helper');
+import { tryGetActiveDevelopmentRelease } from './lms-version-helper.js';
 
-async function run() {
+const rallyApiKey = process.env['RALLY_API_KEY'];
+
+export default async function run(core) {
     try {
-        const version = await lmsVersionHelper.tryGetActiveDevelopmentRelease(core.getInput('RALLY_API_KEY'))
+        const version = await tryGetActiveDevelopmentRelease(rallyApiKey);
         console.log(version + ' is the active development release');
-        core.setOutput("LMS_VERSION", version);
+        core.setOutput('version', version);
     } catch (error) {
         core.setFailed(error.message);
     }
 }
-
-run();

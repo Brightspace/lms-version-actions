@@ -1,11 +1,10 @@
-
-const chalk = require('chalk'),
-	rally = require('rally'),
-	moment = require('moment-timezone');
+import chalk from 'chalk';
+import rally from 'rally';
+import moment from 'moment-timezone';
 
 const rallyVersionChecker = /^(20\.[0-9]{2}\.)([0-9]{2})$/;
 
-async function tryGetActiveDevelopmentRelease(api_key) {
+export async function tryGetActiveDevelopmentRelease(api_key) {
 
 	console.log('Fetching active development release from Rally...');
 	console.group();
@@ -98,5 +97,3 @@ async function tryGetActiveDevelopmentRelease(api_key) {
 	return activeReleaseName;
 
 }
-
-exports.tryGetActiveDevelopmentRelease = tryGetActiveDevelopmentRelease;
