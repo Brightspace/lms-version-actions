@@ -1,0 +1,12 @@
+{
+    "name": "lms-version-actions",
+    "version": "1.0.0",
+    "description": "Collection of GitHub Actions to help coordinate with LMS versioning",
+    "type": "module",
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/Brightspace/lms-version-actions.git"
+    },
+    "author": "D2L Corporation",
+    "license": "Apache-2.0"
+}

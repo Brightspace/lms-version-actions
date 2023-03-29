@@ -5,8 +5,27 @@ inputs:
     description: 'Token to find active releases in Rally'
     required: true
 outputs:
-  lms-version:
+  LMS_VERSION:
     description: 'Current dev version of the LMS'
+    value: ${{ steps.get-lms-version.outputs.version }}
+
 runs:
-  using: 'node12'
-  main: 'index.js'
+  using: composite
+  steps:
+    - name: Install Dependencies
+      run: |
+        echo "Installing dependencies..."
+        npm install chalk@5 moment-timezone@0.5 rally@2 --prefix ${{ github.action_path }} --no-save --loglevel error
+      shell: bash
+
+    - name: Get LMS Version
+      id: get-lms-version
+      uses: actions/github-script@v6
+      env:
+        FORCE_COLOR: 3
+        RALLY_API_KEY: ${{ inputs.RALLY_API_KEY }}
+      with:
+        script: |
+          console.log('Getting LMS Version...');
+          const { default: run } = await import('${{ github.action_path }}/index.js');
+          await run(core);
