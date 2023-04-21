@@ -97,7 +97,7 @@ runs:
             repo: context.repo.repo,
             pull_number: process.env.PRNUM,
             mediaType: {
-              format: "application/vnd.github.v3.patch"
+              format: "patch"
             }
           });
           return response.data
@@ -112,7 +112,7 @@ runs:
         git config user.email 41898282+github-actions[bot]@users.noreply.github.com
         git fetch https://$GITHUB_TOKEN@github.com/${{ github.repository }} +refs/heads/$INPUT_DESTINATION_HEAD_BRANCH:refs/heads/$INPUT_DESTINATION_HEAD_BRANCH || true
         git checkout $INPUT_DESTINATION_HEAD_BRANCH || git checkout -b $INPUT_DESTINATION_HEAD_BRANCH
-        git apply --check << "D2LEOF"
+        git apply --stat --check << "D2LEOF"
         ${{ steps.source-pr-patch.outputs.result }}
         D2LEOF
         git am --keep-cr --signoff << "D2LEOF"
