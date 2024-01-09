@@ -31,14 +31,14 @@ jobs:
       - name: Match LMS Release
         uses: Brightspace/lms-version-actions/match-lms-release@main
         with:
-          GITHUB_TOKEN: ${{ secrets.D2L_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.D2L_RELEASE_TOKEN }}
           RALLY_API_KEY: ${{ secrets.RALLY_API_KEY }}
 ```
 
 Options:
 * `AUTO_MAINTENANCE_BRANCH` (default: `true`): Automatically create maintenance branches for previous releases. These branches will be named `release/{release version}.x` (ex: `release/2022.1.x`)
 * `DRY_RUN` (default: `false`): Simulates a release but does not actually do one
-* `GITHUB_TOKEN`: Token to use to update version in 'package.json' and create the tag -- see section below on branch protection for more details
+* `GITHUB_TOKEN`: Token to use to update version in 'package.json' and create the tag -- see section below on the release token for more details
 * `RALLY_API_KEY`: Key for the RALLY API (used to retrieve active development release)
 * `NPM` (default: `false`): Whether or not to release as an NPM package (see "NPM Package Deployment" below for more info)
 * `NPM_TOKEN` (optional if `NPM` is `false` or publishing to CodeArtifact): Token to publish to NPM (see "NPM Package Deployment" below for more info)
@@ -46,11 +46,11 @@ Options:
 Outputs:
 * `VERSION`: Contains the new version number of the release
 
-### Branch Protection Rules and D2L_GITHUB_TOKEN
+### Rulesets and D2L_RELEASE_TOKEN
 
-The release step will fail to write to `package.json` if you have branch protection rules set up in your repository. To get around this, we use a special Admin `D2L_GITHUB_TOKEN`.
+The release step will fail to write to `package.json` because of the org-level rule requiring pull requests, as well as any rulesets you may have defined requiring PRs or status checks to pass. To get around this, we use a special rotating `D2L_RELEASE_TOKEN`.
 
-[Learn how to set up the D2L_GITHUB_TOKEN...](https://github.com/BrightspaceUI/actions/blob/main/docs/branch-protection.md)
+[Learn how to set up the D2L_RELEASE_TOKEN...](https://github.com/BrightspaceUI/actions/blob/main/docs/release-token.md)
 
 ## Release Increments
 
@@ -104,7 +104,7 @@ Then pass through the `NPM_TOKEN` secret.
 - name: Match LMS Release
   uses: Brightspace/lms-version-actions/match-lms-release@main
   with:
-    GITHUB_TOKEN: ${{ secrets.D2L_GITHUB_TOKEN }}
+    GITHUB_TOKEN: ${{ secrets.D2L_RELEASE_TOKEN }}
     RALLY_API_KEY: ${{ secrets.RALLY_API_KEY }}
     NPM: true
     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
