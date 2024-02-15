@@ -1,6 +1,6 @@
 # Get LMS Release Action
 
-This GitHub action pulls the active development release version of the LMS from Rally for use in other automation.
+This GitHub action retrieves the active development release version of the LMS for use in other automation.
 
 ## Using the Action
 
