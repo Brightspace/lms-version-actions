@@ -94,8 +94,6 @@ Setup Node:
 ```yml
 - name: Setup Node
   uses: Brightspace/third-party-actions@actions/setup-node
-  with:
-    persist-credentials: false
 ```
 
 Then pass through the `NPM_TOKEN` secret.
