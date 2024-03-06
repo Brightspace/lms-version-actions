@@ -13,19 +13,17 @@ name: Release
 on:
   push:
     branches:
-      - master
       - main
-      - '[0-9]+.x'
-      - '[0-9]+.[0-9]+.x'
       - release/[0-9]+.[0-9]+.x
 jobs:
   release:
-    if: "!contains(github.event.head_commit.message, 'skip ci')"
     timeout-minutes: 2
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: Brightspace/third-party-actions@actions/checkout
+        with:
+          persist-credentials: false
       - name: Setup Node
         uses: Brightspace/third-party-actions@actions/setup-node
       - name: Match LMS Release
@@ -96,6 +94,8 @@ Setup Node:
 ```yml
 - name: Setup Node
   uses: Brightspace/third-party-actions@actions/setup-node
+  with:
+    persist-credentials: false
 ```
 
 Then pass through the `NPM_TOKEN` secret.
