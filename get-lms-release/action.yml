@@ -15,7 +15,7 @@ runs:
     - name: Get LMS Version
       id: get-lms-version
       run: |
-        VERSION="20.24.5"
+        VERSION="20.24.6"
         if [ ${RALLY_API_KEY} != "" ]; then
           echo "RALLY_API_KEY detected, returning hard-coded release version..."
         else
