@@ -4,7 +4,7 @@ This GitHub action automatically increments the package version to match a given
 
 ## Using the Action
 
-Typically this action is triggered from a workflow that runs on your `main` or `master` branch after each commit or pull request merge. It requires that the repo have an existing `package.json` with a defined `version` before the first run.
+Typically this action is triggered from a workflow that runs on your `main` branch after each commit or pull request merge. It requires that the repo have an existing `package.json` with a defined `version` before the first run.
 
 Here's a sample release workflow:
 
@@ -29,11 +29,16 @@ jobs:
       - name: Match LMS Release
         uses: Brightspace/lms-version-actions/match-lms-release@main
         with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.D2L_RELEASE_TOKEN }}
-          RALLY_API_KEY: ${{ secrets.RALLY_API_KEY }}
 ```
 
 Options:
+* `aws-access-key-id`: Access key id for the role that will read release info
+* `aws-secret-access-key`: Access key secret for the role that will read release info
+* `aws-session-token`: Session token for the role that will read release info
 * `AUTO_MAINTENANCE_BRANCH` (default: `true`): Automatically create maintenance branches for previous releases. These branches will be named `release/{release version}.x` (ex: `release/2022.1.x`)
 * `DRY_RUN` (default: `false`): Simulates a release but does not actually do one
 * `GITHUB_TOKEN`: Token to use to update version in 'package.json' and create the tag -- see section below on the release token for more details
@@ -102,8 +107,10 @@ Then pass through the `NPM_TOKEN` secret.
 - name: Match LMS Release
   uses: Brightspace/lms-version-actions/match-lms-release@main
   with:
+    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
     GITHUB_TOKEN: ${{ secrets.D2L_RELEASE_TOKEN }}
-    RALLY_API_KEY: ${{ secrets.RALLY_API_KEY }}
     NPM: true
     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 ```
