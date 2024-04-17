@@ -1,9 +1,14 @@
 name: 'Get LMS Version'
 description: 'Retrieves the current active development version of Brightspace'
 inputs:
+  aws-access-key-id:
+    description: Access key id for the role that will read release info
+  aws-secret-access-key:
+    description: Access key secret for the role that will read release info
+  aws-session-token:
+    description: Session token for the role that will read release info
   RALLY_API_KEY:
     description: 'Token to find active releases in Rally'
-    required: true
 outputs:
   LMS_VERSION:
     description: 'Current active development version of the LMS'
@@ -12,18 +17,113 @@ outputs:
 runs:
   using: composite
   steps:
+    - name: Assume role for reading release info
+      if: ${{ inputs.RALLY_API_KEY == '' }}
+      uses: Brightspace/third-party-actions@aws-actions/configure-aws-credentials
+      with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-session-token: ${{ inputs.aws-session-token }}
+        aws-region: ca-central-1
+        role-to-assume: "arn:aws:iam::344604240523:role/prd-release-events-reader"
+    - name: Read release info
+      if: ${{ inputs.RALLY_API_KEY == '' }}
+      run: |
+        aws s3api get-object --bucket prd-nqc-release-events-ca-central-1 --key calendar_events.json calendar_events.json
+      shell: bash
+    - name: Get LMS Version (New)
+      id: get-lms-version-new
+      if: ${{ inputs.RALLY_API_KEY == '' }}
+      uses: Brightspace/third-party-actions@actions/github-script
+      with:
+        script: |
+          const fs = require('fs')
+          const eventsStr = fs.readFileSync('./calendar_events.json');
+          const events = JSON.parse(eventsStr);
+          const devDoneEvents = events
+            .filter(e => e.name.indexOf('Dev Done') !== -1)
+            .map(e => {
+              const releaseParts = e.name.substring(0, 8).split('.');
+              const dateParts = e.day.split('-');
+              return {
+                release: `${releaseParts[0]}.${releaseParts[1]}.${parseInt(releaseParts[2])}`,
+                year: parseInt(dateParts[0]),
+                month: parseInt(dateParts[1]),
+                day: parseInt(dateParts[2])
+              };
+            }).sort(e => new Date(e.year, e.month - 1, e.day).getTime());
+
+          const now = new Date();
+          console.log(`Current server date: ${now.toString()}`);
+
+          const nowTorontoDate = now.toLocaleDateString('en-CA', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+            timeZone: 'America/Toronto'
+          });
+          const nowDateParts = nowTorontoDate.split('-');
+          const nowYear = parseInt(nowDateParts[0]);
+          const nowMonth = parseInt(nowDateParts[1]);
+          const nowDay = parseInt(nowDateParts[2]);
+
+          const nowTorontoTime = now.toLocaleTimeString('en-CA', {
+            hour12: false,
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            timeZone: 'America/Toronto'
+          });
+          const nowTimeParts = nowTorontoTime.split(':');
+          const nowHour = parseInt(nowTimeParts[0]);
+
+          console.log(`Current date in Toronto: ${nowTorontoDate} at ${nowTorontoTime}`);
+
+          console.log('Determining the current active Brightspace release...');
+
+          let currentRelease;
+          for (let i = 0; i < devDoneEvents.length; i++) {
+
+            const devDone = devDoneEvents[i];
+            currentRelease = devDone.release;
+
+            const isInFuture = (devDone.year > nowYear) ||
+              (devDone.year === nowYear && devDone.month > nowMonth) ||
+              (devDone.year === nowYear && devDone.month === nowMonth && devDone.day > nowDay);
+            if (isInFuture) {
+              break;
+            }
+
+            const isReleaseDay = (devDone.year === nowYear && devDone.month === nowMonth && devDone.day === nowDay);
+            if (isReleaseDay) {
+              const isBeforeCutoff = (nowHour < 10);
+              if (isBeforeCutoff) {
+                currentRelease = devDone.release;
+              } else {
+                if (i + 1 === devDoneEvents.length) {
+                  core.setFailed(`Release calendar does not contain a release after "${devDone.release}"`);
+                  break;
+                }
+                currentRelease = devDoneEvents[i + 1].release;
+              }
+              console.log(`Today is the release day for "${devDone.release}", but it is ${isBeforeCutoff ? 'before' : 'after'} the branch cuttoff time of 10am EST (approximate ) in Toronto.`);
+              break;
+            }
+
+          }
+
+          console.log(`The current active Brightspace release is: "${currentRelease}".`);
+          core.setOutput('version', currentRelease);
     - name: Get LMS Version
       id: get-lms-version
       run: |
-        VERSION="20.24.6"
         if [ ${RALLY_API_KEY} != "" ]; then
+          VERSION="20.24.6"
           echo "RALLY_API_KEY detected, returning hard-coded release version..."
-        else
-          echo "RALLY_API_KEY is required, failing..."
-          exit 1
         fi
         echo "$VERSION is the active development release."
         echo "version=$VERSION" >> $GITHUB_OUTPUT
       shell: bash
       env:
         RALLY_API_KEY: ${{ inputs.RALLY_API_KEY }}
+        VERSION: ${{ steps.get-lms-version-new.outputs.version }}

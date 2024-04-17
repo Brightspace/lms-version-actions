@@ -4,10 +4,12 @@ This GitHub action retrieves the active development release version of the LMS f
 
 ## Using the Action
 
-Typically this action is triggered from a workflow that runs on your `main` or `master` branch after each commit or pull request merge.
+Typically this action is triggered from a workflow that runs on your `main` branch after each commit or pull request merge.
 
 Inputs:
-* `RALLY_API_KEY`: Key for the RALLY API (used to retrieve active development release)
+* `aws-access-key-id`: Access key id for the role that will read release info
+* `aws-secret-access-key`: Access key secret for the role that will read release info
+* `aws-session-token`: Session token for the role that will read release info
 
 Outputs:
 * `LMS_VERSION`: Will contain the current active development release version

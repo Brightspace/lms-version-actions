@@ -2,6 +2,12 @@ name: Match LMS Release
 description: Create a release based on the current version of Brightspace and the patch version of the consumer
 
 inputs:
+  aws-access-key-id:
+    description: Access key id for the role that will read release info
+  aws-secret-access-key:
+    description: Access key secret for the role that will read release info
+  aws-session-token:
+    description: Session token for the role that will read release info
   DRY_RUN:
     description: Simulates a release but does not actually do one
     default: false
@@ -12,7 +18,6 @@ inputs:
     required: false
   RALLY_API_KEY:
     description: 'API key to find active releases in Rally'
-    required: true
   GITHUB_TOKEN:
     description: Token to use to update version in 'package.json' and create the tag
     required: true
@@ -41,6 +46,9 @@ runs:
     - uses: Brightspace/lms-version-actions/get-lms-release@main
       id: get-lms-version
       with:
+        aws-access-key-id: ${{ inputs.aws-access-key-id }}
+        aws-secret-access-key: ${{ inputs.aws-secret-access-key }}
+        aws-session-token: ${{ inputs.aws-session-token }}
         RALLY_API_KEY: ${{ inputs.RALLY_API_KEY }}
 
     - name: Get maintenance version
