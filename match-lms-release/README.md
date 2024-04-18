@@ -42,7 +42,6 @@ Options:
 * `AUTO_MAINTENANCE_BRANCH` (default: `true`): Automatically create maintenance branches for previous releases. These branches will be named `release/{release version}.x` (ex: `release/2022.1.x`)
 * `DRY_RUN` (default: `false`): Simulates a release but does not actually do one
 * `GITHUB_TOKEN`: Token to use to update version in 'package.json' and create the tag -- see section below on the release token for more details
-* `RALLY_API_KEY`: Key for the RALLY API (used to retrieve active development release)
 * `NPM` (default: `false`): Whether or not to release as an NPM package (see "NPM Package Deployment" below for more info)
 * `NPM_TOKEN` (optional if `NPM` is `false` or publishing to CodeArtifact): Token to publish to NPM (see "NPM Package Deployment" below for more info)
 
