@@ -3,12 +3,13 @@ description: 'Retrieves the current active development version of Brightspace'
 inputs:
   aws-access-key-id:
     description: Access key id for the role that will read release info
+    required: true
   aws-secret-access-key:
     description: Access key secret for the role that will read release info
+    required: true
   aws-session-token:
     description: Session token for the role that will read release info
-  RALLY_API_KEY:
-    description: 'Token to find active releases in Rally'
+    required: true
 outputs:
   LMS_VERSION:
     description: 'Current active development version of the LMS'
@@ -18,7 +19,6 @@ runs:
   using: composite
   steps:
     - name: Assume role for reading release info
-      if: ${{ inputs.RALLY_API_KEY == '' }}
       uses: Brightspace/third-party-actions@aws-actions/configure-aws-credentials
       with:
         aws-access-key-id: ${{ inputs.aws-access-key-id }}
@@ -27,13 +27,11 @@ runs:
         aws-region: ca-central-1
         role-to-assume: "arn:aws:iam::344604240523:role/prd-release-events-reader"
     - name: Read release info
-      if: ${{ inputs.RALLY_API_KEY == '' }}
       run: |
         aws s3api get-object --bucket prd-nqc-release-events-ca-central-1 --key calendar_events.json calendar_events.json
       shell: bash
-    - name: Get LMS Version (New)
-      id: get-lms-version-new
-      if: ${{ inputs.RALLY_API_KEY == '' }}
+    - name: Get LMS Version
+      id: get-lms-version
       uses: Brightspace/third-party-actions@actions/github-script
       with:
         script: |
@@ -114,16 +112,3 @@ runs:
 
           console.log(`The current active Brightspace release is: "${currentRelease}".`);
           core.setOutput('version', currentRelease);
-    - name: Get LMS Version
-      id: get-lms-version
-      run: |
-        if [ ${RALLY_API_KEY} != "" ]; then
-          VERSION="20.24.6"
-          echo "RALLY_API_KEY detected, returning hard-coded release version..."
-        fi
-        echo "$VERSION is the active development release."
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
-      shell: bash
-      env:
-        RALLY_API_KEY: ${{ inputs.RALLY_API_KEY }}
-        VERSION: ${{ steps.get-lms-version-new.outputs.version }}
