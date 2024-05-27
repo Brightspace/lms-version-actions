@@ -2,7 +2,8 @@
 
 This GitHub action retrieves the corresponding release branch based on the LMS
 build number you supply. If no such branch exists it will return the
-repositories default branch.
+repository's default branch.
+
 
 ## Using the Action
 
