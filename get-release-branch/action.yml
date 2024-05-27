@@ -1,0 +1,52 @@
+name: Get Release Branch
+description: Retrieves the corresponding release branch or repository default branch
+inputs:
+  build-number:
+    description: LMS build number
+    required: true
+    type: string
+outputs:
+  branch:
+    description: Corresponding release branch or repository default branch
+    value: ${{steps.db.outputs.branch}}
+runs:
+  using: composite
+  steps:
+    - name: Validate build number
+      shell: bash
+      run: |
+        if [[ ! "$BUILD_NUMBER" =~ $BUILD_NUMBER_REGEX ]]; then
+            echo "Invalid build number format: $BUILD_NUMBER"
+            exit 1
+        fi
+      env:
+        BUILD_NUMBER: ${{inputs.build-number}}
+        BUILD_NUMBER_REGEX: ^([0-9]{2}\.){2}[0-9]{1,2}\.[0-9]{1,5}$
+    - name: Determine branch
+      id: db
+      shell: bash
+      run: |
+        RELEASE_MAJOR_MINOR=$(cut -d'.' -f1-2 <<< $BUILD_NUMBER)
+        RELEASE_MAJOR_MINOR=${RELEASE_MAJOR_MINOR//./}
+        RELEASE_PATCH=$(cut -d'.' -f3 <<< $BUILD_NUMBER)
+        BRANCH="release/$RELEASE_MAJOR_MINOR.$RELEASE_PATCH.x"
+        echo "Checking if the branch '$BRANCH' exists"
+        set +e
+        gh api \
+          --silent \
+          -H "Accept: application/vnd.github+json" \
+          -H "X-GitHub-Api-Version: 2022-11-28" \
+          "repos/$GITHUB_REPOSITORY/branches/$BRANCH" >/dev/null 2>&1
+        EXIT_RESULT=$?
+        set -e
+        if [ $EXIT_RESULT -eq 0 ]; then
+          echo "Branch exist, using '$BRANCH' branch"
+        else
+          echo "Branch does not exist, using '$DEFAULT_BRANCH' branch"
+          BRANCH="$DEFAULT_BRANCH"
+        fi
+        echo "branch=$BRANCH" >> $GITHUB_OUTPUT
+      env:
+        GITHUB_TOKEN: ${{github.token}}
+        BUILD_NUMBER: ${{inputs.build-number}}
+        DEFAULT_BRANCH: ${{github.event.repository.default_branch}}
