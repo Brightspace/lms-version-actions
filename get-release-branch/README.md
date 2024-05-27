@@ -23,7 +23,7 @@ jobs:
     timeout-minutes: 5
     runs-on: [self-hosted, Linux, AWS]
     steps:
-      - name: Determine branch
+      - name: Get release branch
         uses: Brightspace/lms-version-actions/get-release-branch@main
         id: release
         with:
