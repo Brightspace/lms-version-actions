@@ -60,8 +60,6 @@ The first commit made during any given LMS release will update the Major and/or 
 
 Pull requests merged into maintenance branches created by the action (ex: `release/2022.2.x`) or named for a minor version (ex: `1.7.x`) or major version (ex: `1.x`) will trigger patch releases for the maintenance branch version.
 
-**TO NOTE:** If you have `AUTO_MAINTENANCE_BRANCH` set to `false`, non-admins may need to use [release-branch-management](https://github.com/Brightspace/release-branch-management) to create these maintenance branches, due to current restrictions with ruleset functionality.
-
 ## NPM Package Deployment
 
 If you'd like the action to publish your package with NPM (including to CodeArtifact), set the `NPM` option to `true`.
