@@ -25,7 +25,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Setup Node
-        uses: Brightspace/third-party-actions@actions/setup-node
+        uses: Brightspace/setup-node@main
       - name: Match LMS Release
         uses: Brightspace/lms-version-actions/match-lms-release@main
         with:
@@ -95,7 +95,7 @@ Setup Node:
 
 ```yml
 - name: Setup Node
-  uses: Brightspace/third-party-actions@actions/setup-node
+  uses: Brightspace/setup-node@main
 ```
 
 Then pass through the `NPM_TOKEN` secret.
