@@ -26,9 +26,6 @@ inputs:
     description: Whether or not to release as an NPM package
     default: false
     required: false
-  NPM_TOKEN:
-    description: Token to publish to NPM
-    required: false
 
 outputs:
   VERSION:
@@ -113,6 +110,4 @@ runs:
 
         echo "Running npm publish with options: ${OPTS}"
         npm publish ${OPTS}
-      env:
-        NODE_AUTH_TOKEN: ${{ inputs.NPM_TOKEN }}
       shell: bash

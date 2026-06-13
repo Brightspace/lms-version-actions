@@ -43,7 +43,6 @@ Options:
 * `DRY_RUN` (default: `false`): Simulates a release but does not actually do one
 * `GITHUB_TOKEN`: Token to use to update version in 'package.json' and create the tag -- see section below on the release token for more details
 * `NPM` (default: `false`): Whether or not to release as an NPM package (see "NPM Package Deployment" below for more info)
-* `NPM_TOKEN` (optional if `NPM` is `false` or publishing to CodeArtifact): Token to publish to NPM (see "NPM Package Deployment" below for more info)
 
 Outputs:
 * `VERSION`: Contains the new version number of the release
@@ -62,7 +61,7 @@ Pull requests merged into maintenance branches created by the action (ex: `relea
 
 ## NPM Package Deployment
 
-If you'd like the action to publish your package with NPM (including to CodeArtifact), set the `NPM` option to `true`.
+If you'd like the action to publish your package to CodeArtifact, set the `NPM` option to `true`.
 
 NPM deployments for maintenance branches (ex: `release/2022.2.x`, `1.7.x`, or `1.x`) will be annotated with a tag corresponding to the branch version (ex: `release-2022.2.x`, `release-1.7.x`, or `release-1.x`). All other deployments will use NPM's default tag of `latest`.
 
@@ -88,38 +87,3 @@ Also ensure that:
 1. The repo has been [configured for CodeArtifact](https://github.com/Brightspace/codeartifact-actions/tree/main/npm#packagejson) in [repo-settings](https://github.com/Brightspace/repo-settings)
 2. The package name is prefixed with `@d2l` (e.g. `@d2l/package-name`) in both `package.json` and [repo-settings](https://github.com/Brightspace/repo-settings)
 3. You have [configured `publishConfig` correctly](https://github.com/Brightspace/codeartifact-actions/tree/main/npm#packagejson) in `package.json`
-
-### NPM
-
-Setup Node:
-
-```yml
-- name: Setup Node
-  uses: Brightspace/setup-node@main
-```
-
-Then pass through the `NPM_TOKEN` secret.
-
-```yml
-- name: Match LMS Release
-  uses: Brightspace/lms-version-actions/match-lms-release@main
-  with:
-    aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-    aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-    GITHUB_TOKEN: ${{ secrets.D2L_RELEASE_TOKEN }}
-    NPM: true
-    NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-```
-
-`NPM_TOKEN` is available as a shared organization secret in the `Brightspace`, `BrightspaceUI`, `BrightspaceUILabs` and `BrightspaceHypermediaComponents` organizations.
-
-If your package is being published under the `@brightspace-ui` or `@brightspace-ui-labs` NPM organizations, ensure that it has the proper configuration in its `package.json`:
-
-```json
-"publishConfig": {
-  "access": "public"
-}
-```
-
-Also ensure that `"private": true` is not present.
