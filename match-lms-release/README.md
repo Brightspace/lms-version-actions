@@ -2,6 +2,8 @@
 
 This GitHub action automatically increments the package version to match a given LMS release, creates an appropriate tag, and optionally publishes to NPM.
 
+Note: the `match-lms-release` action requires at least Node `v22`.
+
 ## Using the Action
 
 Typically this action is triggered from a workflow that runs on your `main` branch after each commit or pull request merge. It requires that the repo have an existing `package.json` with a defined `version` before the first run. If setting up releasing for the first time, the version needs to be the current LMS major version (e.g., `2026.1.0`).
